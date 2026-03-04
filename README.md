@@ -14,6 +14,47 @@ An MCP (Model Context Protocol) server that provides royalty-free image search f
 - Node.js 18+
 - Pexels API key (free at [pexels.com/api](https://www.pexels.com/api/))
 
+## Architecture (High-Level)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           MCP Client (Cursor, Claude, VS Code, etc.)        │
+│                                     │                                       │
+│                            stdio (stdin/stdout)                             │
+└─────────────────────────────────────┼───────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         MCP Image Resolver Server                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  index.ts          MCP server entry, registers tools, stdio transport│   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                      │                                      │
+│                                      ▼                                      │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  tools/search-images.ts   Tool handler: search_images(query)         │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                      │                                      │
+│                                      ▼                                      │
+│  ┌──────────────────────┐    ┌──────────────────────────────────────────┐  │
+│  │  providers/pexels.ts  │    │  providers/types.ts   Unified schema     │  │
+│  │  Pexels API adapter   │───▶│  ImageResult, SearchImagesResult         │  │
+│  └──────────────────────┘    └──────────────────────────────────────────┘  │
+│               │                                                             │
+│               │     ┌────────────────────────────────────────────────────┐ │
+│               └────▶│  utils/normalize.ts   Map API response → ImageResult│ │
+│                     └────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────┼───────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Pexels API (api.pexels.com)                         │
+│                    Royalty-free image search endpoint                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Flow:** MCP client → stdio → `index.ts` (registers `search_images`) → `search-images.ts` (tool handler) → `pexels.ts` (provider) → Pexels API. Responses are normalized via `utils/normalize.ts` to a unified `ImageResult` schema before returning to the client. Future providers (e.g. Unsplash, Pixabay) can be added by implementing the same `ImageResult` contract.
+
 ## Quick Start
 
 ```bash
@@ -174,6 +215,10 @@ Images are sourced from [Pexels](https://www.pexels.com/). Per Pexels API terms:
 - Provide a prominent link to Pexels (e.g. "Photos provided by Pexels")
 - Credit photographers when displaying images: "Photo by [Photographer Name] on Pexels"
 - Response metadata includes `photographer` and `source` for compliance
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards. See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## License
 
