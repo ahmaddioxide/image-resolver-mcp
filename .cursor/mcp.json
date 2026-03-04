@@ -4,7 +4,7 @@
       "command": "node",
       "args": ["/Users/ahmad/Development/personal/image-mcp/build/index.js"],
       "env": {
-        "PEXELS_API_KEY": "A2FOMd4FvUvMek2kBOj2AfBkI5F3IMy3le4Rsbntw82DnZCmQmM88PsV"
+        "PEXELS_API_KEY": "your-pexels-api-key"
       }
     }
   }
