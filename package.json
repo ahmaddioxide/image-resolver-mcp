@@ -1,0 +1,36 @@
+{
+  "name": "mcp-image-resolver",
+  "version": "0.1.0",
+  "description": "MCP server for context-aware royalty-free image search",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/image-mcp.git"
+  },
+  "homepage": "https://github.com/yourusername/image-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/image-mcp/issues"
+  },
+  "bin": {
+    "mcp-image-resolver": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x build/index.js 2>/dev/null || true",
+    "start": "node build/index.js",
+    "dev": "npx tsx src/index.ts"
+  },
+  "files": ["build"],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
