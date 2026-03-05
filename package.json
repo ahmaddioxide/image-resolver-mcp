@@ -1,6 +1,6 @@
 {
   "name": "@ahmaddioxide/mcp-image-resolver",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server for context-aware royalty-free image search from Pexels and Unsplash",
   "mcpName": "io.github.ahmaddioxide/image-resolver",
   "type": "module",

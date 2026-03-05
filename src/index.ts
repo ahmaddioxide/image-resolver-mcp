@@ -9,7 +9,7 @@ import { resolveImageAttribution } from "./tools/resolve-image-attribution.js";
 
 const server = new McpServer({
   name: "mcp-image-resolver",
-  version: "0.2.0",
+  version: "0.3.0",
 });
 
 const orientationSchema = z
