@@ -1,16 +1,17 @@
 {
-  "name": "mcp-image-resolver",
+  "name": "@ahmaddioxide/mcp-image-resolver",
   "version": "0.2.0",
   "description": "MCP server for context-aware royalty-free image search from Pexels and Unsplash",
+  "mcpName": "io.github.ahmaddioxide/image-resolver",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/image-mcp.git"
+    "url": "https://github.com/ahmaddioxide/image-resolver-mcp.git"
   },
-  "homepage": "https://github.com/yourusername/image-mcp#readme",
+  "homepage": "https://github.com/ahmaddioxide/image-resolver-mcp#readme",
   "bugs": {
-    "url": "https://github.com/yourusername/image-mcp/issues"
+    "url": "https://github.com/ahmaddioxide/image-resolver-mcp/issues"
   },
   "bin": {
     "mcp-image-resolver": "./build/index.js"
