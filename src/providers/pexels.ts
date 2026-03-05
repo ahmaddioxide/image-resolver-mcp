@@ -2,7 +2,7 @@
  * Pexels API adapter for royalty-free image search.
  * API: https://www.pexels.com/api/documentation/
  */
-import type { ImageResult } from "./types.js";
+import type { ImageResult, SearchOptions } from "./types.js";
 import { pexelsToImageResult, type PexelsPhoto } from "../utils/normalize.js";
 
 const PEXELS_API_BASE = "https://api.pexels.com/v1";
@@ -18,11 +18,18 @@ export interface PexelsSearchResponse {
 export async function searchPexels(
   apiKey: string,
   query: string,
-  limit = 10,
+  options: SearchOptions = {},
 ): Promise<ImageResult[]> {
+  const limit = Math.min(options.limit ?? 10, 80);
+  const page = options.page ?? 1;
+
   const url = new URL(`${PEXELS_API_BASE}/search`);
   url.searchParams.set("query", query);
-  url.searchParams.set("per_page", String(Math.min(limit, 80)));
+  url.searchParams.set("per_page", String(limit));
+  url.searchParams.set("page", String(page));
+  if (options.orientation) {
+    url.searchParams.set("orientation", options.orientation);
+  }
 
   const response = await fetch(url.toString(), {
     headers: {

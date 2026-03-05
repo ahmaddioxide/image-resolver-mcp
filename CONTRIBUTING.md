@@ -8,7 +8,7 @@ Thank you for your interest in contributing. This document explains how to get s
 
 - Node.js 18+
 - npm or pnpm
-- A Pexels API key (free at [pexels.com/api](https://www.pexels.com/api/))
+- At least one API key: Pexels ([pexels.com/api](https://www.pexels.com/api/)) and/or Unsplash ([unsplash.com/oauth/applications](https://unsplash.com/oauth/applications))
 
 ### Setup
 
@@ -17,7 +17,7 @@ git clone https://github.com/yourusername/image-mcp.git
 cd image-mcp
 npm install
 cp .env.example .env
-# Add your PEXELS_API_KEY to .env
+# Add PEXELS_API_KEY and/or UNSPLASH_ACCESS_KEY to .env
 npm run build
 ```
 
@@ -37,7 +37,10 @@ Or via MCP config:
     "image-resolver": {
       "command": "npx",
       "args": ["tsx", "/path/to/image-mcp/src/index.ts"],
-      "env": { "PEXELS_API_KEY": "your-key" }
+      "env": {
+        "PEXELS_API_KEY": "your-key",
+        "UNSPLASH_ACCESS_KEY": "your-unsplash-key"
+      }
     }
   }
 }
@@ -75,25 +78,30 @@ Or via MCP config:
 
 ```
 src/
-├── index.ts              # MCP server entry, tool registration
+├── index.ts                    # MCP server entry, registers 5 tools
 ├── tools/
-│   └── search-images.ts  # search_images tool handler
+│   ├── search-images.ts        # search_images (multi-provider)
+│   ├── extract-image-query.ts  # extract_image_query (compromise.js)
+│   ├── get-best-image.ts       # get_best_image
+│   ├── search-images-batch.ts  # search_images_batch
+│   └── resolve-image-attribution.ts
 ├── providers/
-│   ├── types.ts          # ImageResult, SearchOptions, Provider interface
-│   └── pexels.ts         # Pexels API adapter
+│   ├── types.ts                # ImageResult, SearchOptions, Provider interface
+│   ├── pexels.ts               # Pexels API adapter
+│   └── unsplash.ts             # Unsplash API adapter
 └── utils/
-    └── normalize.ts      # Map provider responses to ImageResult
+    └── normalize.ts            # pexelsToImageResult, unsplashToImageResult
 ```
 
 ## Adding a New Image Provider
 
-To add a provider (e.g. Unsplash, Pixabay):
+To add a provider (e.g. Pixabay):
 
-1. Create `src/providers/your-provider.ts`.
+1. Create `src/providers/your-provider.ts` (see `pexels.ts` or `unsplash.ts` as examples).
 2. Implement a function that returns `ImageResult[]` (see `providers/types.ts`).
-3. Add a normalizer in `utils/normalize.ts` if the API response differs.
-4. Update `tools/search-images.ts` to support provider selection (or add a new tool).
-5. Document the new provider and any required API keys.
+3. Add a normalizer in `utils/normalize.ts` for the API response shape.
+4. Update `tools/search-images.ts` to call the new provider and merge results.
+5. Add the env var to `.env.example` and document in README.
 
 ## Code Style
 

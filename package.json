@@ -1,7 +1,7 @@
 {
   "name": "mcp-image-resolver",
-  "version": "0.1.0",
-  "description": "MCP server for context-aware royalty-free image search",
+  "version": "0.2.0",
+  "description": "MCP server for context-aware royalty-free image search from Pexels and Unsplash",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -20,9 +20,12 @@
     "start": "node build/index.js",
     "dev": "npx tsx src/index.ts"
   },
-  "files": ["build"],
+  "files": [
+    "build"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "compromise": "^14.15.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {

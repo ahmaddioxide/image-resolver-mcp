@@ -1,5 +1,5 @@
 /**
- * Maps Pexels API photo object to unified ImageResult schema.
+ * Maps provider API responses to unified ImageResult schema.
  */
 import type { ImageResult } from "../providers/types.js";
 
@@ -36,6 +36,50 @@ export function pexelsToImageResult(photo: PexelsPhoto): ImageResult {
     width: photo.width,
     height: photo.height,
     photographer: photo.photographer,
+    tags,
+  };
+}
+
+/** Unsplash API photo structure */
+export interface UnsplashPhoto {
+  id: string;
+  width: number;
+  height: number;
+  description?: string | null;
+  alt_description?: string | null;
+  urls?: {
+    raw?: string;
+    full?: string;
+    regular?: string;
+    small?: string;
+    thumb?: string;
+  };
+  user?: {
+    name?: string;
+    username?: string;
+  };
+  tags?: Array<{ title?: string }>;
+}
+
+export function unsplashToImageResult(photo: UnsplashPhoto): ImageResult {
+  const imageUrl =
+    photo.urls?.regular ?? photo.urls?.full ?? photo.urls?.raw ?? "";
+  const photographer = photo.user?.name ?? photo.user?.username ?? "Unknown";
+  const tags =
+    photo.tags?.map((t) => (t.title ?? "").toLowerCase()).filter(Boolean) ??
+    (photo.alt_description
+      ? photo.alt_description
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 2)
+      : []);
+
+  return {
+    url: imageUrl,
+    source: "Unsplash",
+    width: photo.width,
+    height: photo.height,
+    photographer,
     tags,
   };
 }

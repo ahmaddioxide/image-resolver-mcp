@@ -19,11 +19,15 @@ export interface Provider {
   search(query: string, options?: SearchOptions): Promise<ImageResult[]>;
 }
 
+export type Orientation = "landscape" | "portrait" | "square";
+
 export interface SearchOptions {
   /** Max results to return (default: 10) */
   limit?: number;
-  /** Page for pagination */
+  /** Page for pagination (default: 1) */
   page?: number;
+  /** Filter by aspect ratio */
+  orientation?: Orientation;
 }
 
 /** Response shape for search_images tool (BRD schema + optional error) */

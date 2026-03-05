@@ -1,32 +1,77 @@
 /**
  * search_images tool handler.
- * Uses Pexels provider for royalty-free image search.
+ * Uses Pexels and Unsplash providers for royalty-free image search.
  */
-import type { SearchImagesResult } from "../providers/types.js";
+import type {
+  SearchImagesResult,
+  SearchOptions,
+  ImageResult,
+} from "../providers/types.js";
 import { searchPexels } from "../providers/pexels.js";
+import { searchUnsplash } from "../providers/unsplash.js";
 
 export type { SearchImagesResult } from "../providers/types.js";
 
 const DEFAULT_LIMIT = 10;
 
-export async function searchImages(query: string): Promise<SearchImagesResult> {
-  const apiKey = process.env.PEXELS_API_KEY;
-  if (!apiKey || apiKey === "your-pexels-api-key") {
+function hasValidKey(key: string | undefined, placeholder: string): boolean {
+  return !!(key && key !== placeholder);
+}
+
+export async function searchImages(
+  query: string,
+  options: SearchOptions = {},
+): Promise<SearchImagesResult> {
+  const pexelsKey = process.env.PEXELS_API_KEY;
+  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
+
+  if (
+    !hasValidKey(pexelsKey, "your-pexels-api-key") &&
+    !hasValidKey(unsplashKey, "your-unsplash-access-key")
+  ) {
     return {
       results: [],
       error:
-        "PEXELS_API_KEY is not set. Get a free key at https://www.pexels.com/api/ and add it to your environment.",
+        "No API keys configured. Set PEXELS_API_KEY and/or UNSPLASH_ACCESS_KEY. " +
+        "Get keys at https://www.pexels.com/api/ and https://unsplash.com/oauth/applications",
     };
   }
 
-  try {
-    const images = await searchPexels(apiKey, query, DEFAULT_LIMIT);
-    return { results: images };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return {
-      results: [],
-      error: message,
-    };
+  const limit = options.limit ?? DEFAULT_LIMIT;
+  const opts: SearchOptions = { ...options, limit };
+
+  const results: ImageResult[] = [];
+  const errors: string[] = [];
+
+  const promises: Promise<ImageResult[]>[] = [];
+
+  if (hasValidKey(pexelsKey, "your-pexels-api-key")) {
+    promises.push(
+      searchPexels(pexelsKey!, query, opts).catch((err) => {
+        errors.push(`Pexels: ${err instanceof Error ? err.message : String(err)}`);
+        return [];
+      }),
+    );
   }
+
+  if (hasValidKey(unsplashKey, "your-unsplash-access-key")) {
+    promises.push(
+      searchUnsplash(unsplashKey!, query, opts).catch((err) => {
+        errors.push(
+          `Unsplash: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        return [];
+      }),
+    );
+  }
+
+  const providerResults = await Promise.all(promises);
+  for (const arr of providerResults) {
+    results.push(...arr);
+  }
+
+  return {
+    results: results.slice(0, limit),
+    error: errors.length > 0 ? errors.join("; ") : undefined,
+  };
 }

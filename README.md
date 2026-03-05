@@ -1,18 +1,22 @@
 # MCP Image Resolver Server
 
-An MCP (Model Context Protocol) server that provides royalty-free image search for AI hosts like Cursor, Claude Desktop, VS Code, Windsurf, and more. Ask your AI assistant to find images by natural language—it uses the `search_images` tool and returns structured results from Pexels.
+An MCP (Model Context Protocol) server that provides royalty-free image search for AI hosts like Cursor, Claude Desktop, VS Code, Windsurf, and more. Ask your AI assistant to find images by natural language—it uses the `search_images` tool and returns structured results from Pexels and Unsplash.
 
 ## Features
 
-- **search_images** — Search for royalty-free images by natural language query
-- **Pexels integration** — Uses Pexels API (free tier)
+- **search_images** — Search for royalty-free images (supports limit, page, orientation)
+- **extract_image_query** — Transform free-form text into an image search query
+- **get_best_image** — Return a single best image for a query
+- **search_images_batch** — Run multiple searches in parallel
+- **resolve_image_attribution** — Generate provider-compliant attribution text
+- **Pexels & Unsplash** — Multi-provider support (free tier for both)
 - **Unified response** — Structured results with url, source, dimensions, photographer, tags
 - **Works everywhere** — Any MCP client that supports stdio servers
 
 ## Requirements
 
 - Node.js 18+
-- Pexels API key (free at [pexels.com/api](https://www.pexels.com/api/))
+- At least one API key: Pexels ([pexels.com/api](https://www.pexels.com/api/)) and/or Unsplash ([unsplash.com/oauth/applications](https://unsplash.com/oauth/applications))
 
 ## Architecture (High-Level)
 
@@ -36,39 +40,38 @@ An MCP (Model Context Protocol) server that provides royalty-free image search f
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                      │                                      │
 │                                      ▼                                      │
-│  ┌──────────────────────┐    ┌──────────────────────────────────────────┐  │
-│  │  providers/pexels.ts  │    │  providers/types.ts   Unified schema     │  │
-│  │  Pexels API adapter   │───▶│  ImageResult, SearchImagesResult         │  │
-│  └──────────────────────┘    └──────────────────────────────────────────┘  │
-│               │                                                             │
-│               │     ┌────────────────────────────────────────────────────┐ │
-│               └────▶│  utils/normalize.ts   Map API response → ImageResult│ │
-│                     └────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────┐  ┌──────────────────────┐                        │
+│  │  providers/pexels.ts  │  │ providers/unsplash.ts │                        │
+│  │  Pexels API adapter   │  │ Unsplash API adapter  │──▶ ImageResult schema  │
+│  └──────────────────────┘  └──────────────────────┘                        │
+│               │                        │                                    │
+│               └────────────────────────┴────▶ utils/normalize.ts            │
 └─────────────────────────────────────┼───────────────────────────────────────┘
                                       │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Pexels API (api.pexels.com)                         │
-│                    Royalty-free image search endpoint                       │
-└─────────────────────────────────────────────────────────────────────────────┘
+                    ┌─────────────────┴─────────────────┐
+                    ▼                                   ▼
+┌──────────────────────────────┐    ┌──────────────────────────────────────────┐
+│  Pexels API                  │    │  Unsplash API                             │
+│  api.pexels.com              │    │  api.unsplash.com                         │
+└──────────────────────────────┘    └──────────────────────────────────────────┘
 ```
 
-**Flow:** MCP client → stdio → `index.ts` (registers `search_images`) → `search-images.ts` (tool handler) → `pexels.ts` (provider) → Pexels API. Responses are normalized via `utils/normalize.ts` to a unified `ImageResult` schema before returning to the client. Future providers (e.g. Unsplash, Pixabay) can be added by implementing the same `ImageResult` contract.
+**Flow:** MCP client → stdio → `index.ts` (registers tools) → `search-images.ts` → Pexels and Unsplash providers (when keys are set). Results are merged (Pexels first, then Unsplash) and normalized to the unified `ImageResult` schema.
 
 ## Quick Start
 
 ```bash
 git clone https://github.com/ahmaddioxide/image-resolver-mcp.git
-cd image-
+cd image-resolver-mcp
 npm install
 npm run build
 ```
 
-Create a `.env` file or set `PEXELS_API_KEY` in your environment:
+Create a `.env` file or set API keys in your environment:
 
 ```bash
 cp .env.example .env
-# Edit .env and add your Pexels API key
+# Edit .env and add PEXELS_API_KEY and/or UNSPLASH_ACCESS_KEY
 ```
 
 ## Client Setup
@@ -86,7 +89,8 @@ Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
       "command": "node",
       "args": ["/path/to/image-mcp/build/index.js"],
       "env": {
-        "PEXELS_API_KEY": "your-pexels-api-key"
+        "PEXELS_API_KEY": "your-pexels-api-key",
+        "UNSPLASH_ACCESS_KEY": "your-unsplash-access-key"
       }
     }
   }
@@ -111,7 +115,8 @@ Via Settings: **Developer → Edit Config**
       "command": "node",
       "args": ["/path/to/image-mcp/build/index.js"],
       "env": {
-        "PEXELS_API_KEY": "your-pexels-api-key"
+        "PEXELS_API_KEY": "your-pexels-api-key",
+        "UNSPLASH_ACCESS_KEY": "your-unsplash-access-key"
       }
     }
   }
@@ -132,7 +137,8 @@ Add to `.vscode/mcp.json` (workspace) or your user profile `mcp.json`:
       "command": "node",
       "args": ["/path/to/image-mcp/build/index.js"],
       "env": {
-        "PEXELS_API_KEY": "your-pexels-api-key"
+        "PEXELS_API_KEY": "your-pexels-api-key",
+        "UNSPLASH_ACCESS_KEY": "your-unsplash-access-key"
       }
     }
   }
@@ -152,7 +158,8 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
       "command": "node",
       "args": ["/path/to/image-mcp/build/index.js"],
       "env": {
-        "PEXELS_API_KEY": "your-pexels-api-key"
+        "PEXELS_API_KEY": "your-pexels-api-key",
+        "UNSPLASH_ACCESS_KEY": "your-unsplash-access-key"
       }
     }
   }
@@ -167,7 +174,7 @@ Any client that supports stdio MCP servers (Amp, Continue.dev, AIQL TUUI, Amazon
 
 - **Command**: `node`
 - **Args**: `["/path/to/image-mcp/build/index.js"]`
-- **Env**: `{ "PEXELS_API_KEY": "your-key" }`
+- **Env**: `{ "PEXELS_API_KEY": "your-key", "UNSPLASH_ACCESS_KEY": "your-key" }` (at least one required)
 
 ## Development Mode
 
@@ -180,7 +187,8 @@ Run without building, using `tsx`:
       "command": "npx",
       "args": ["tsx", "/path/to/image-mcp/src/index.ts"],
       "env": {
-        "PEXELS_API_KEY": "your-pexels-api-key"
+        "PEXELS_API_KEY": "your-pexels-api-key",
+        "UNSPLASH_ACCESS_KEY": "your-unsplash-access-key"
       }
     }
   }
@@ -202,19 +210,34 @@ The tool returns image URLs and metadata. Use the links to view or download imag
 
 ## Tool Schema
 
-| Field        | Type   | Description                                      |
-|-------------|--------|--------------------------------------------------|
-| `query`     | string | Natural language search (e.g. "sunset mosque")   |
+| Tool                     | Params                     | Description                                  |
+|--------------------------|----------------------------|----------------------------------------------|
+| **search_images**        | query, limit?, page?, orientation? | Search images from Pexels and Unsplash       |
+| **extract_image_query**  | context                    | Extract search terms from free-form text     |
+| **get_best_image**       | query, orientation?        | Return a single best image                   |
+| **search_images_batch**  | queries, limit?            | Run multiple searches in parallel            |
+| **resolve_image_attribution** | photographer, source, url? | Generate attribution text                    |
 
-**Response:** JSON with `results` array of `{ url, source, width, height, photographer, tags }`.
+**Response:** JSON with `results` array of `{ url, source, width, height, photographer, tags }`. Each result includes `source` (`"Pexels"` or `"Unsplash"`) for attribution.
+
+**Note:** When both providers are configured, results are merged with Pexels first, then Unsplash. Use `limit: 20` or higher to see results from both providers in a single search.
+
+## Testing
+
+Example prompts to verify the tools:
+
+- *"Search for mountain landscape with limit 20 and show me which results came from Pexels vs Unsplash."*
+- *"Use extract_image_query on: I need a hero image for a meditation app with mountains."*
+- *"Use search_images_batch for 'sunset mosque', 'pakistani flag', and 'zen yoga'."*
+- *"Get a single best image for coffee shop and generate attribution for it."*
 
 ## Attribution
 
-Images are sourced from [Pexels](https://www.pexels.com/). Per Pexels API terms:
+Images are sourced from [Pexels](https://www.pexels.com/) and [Unsplash](https://unsplash.com/). Per their API terms:
 
-- Provide a prominent link to Pexels (e.g. "Photos provided by Pexels")
-- Credit photographers when displaying images: "Photo by [Photographer Name] on Pexels"
-- Response metadata includes `photographer` and `source` for compliance
+- Provide prominent links to Pexels and Unsplash
+- Credit photographers: "Photo by [Name] on Pexels" / "Photo by [Name] on Unsplash"
+- Response metadata includes `photographer` and `source`; use `resolve_image_attribution` for compliant text
 
 ## Contributing
 
