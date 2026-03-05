@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ahmaddioxide/image-resolver",
+  "description": "MCP server for context-aware royalty-free image search from Pexels and Unsplash",
+  "repository": {
+    "url": "https://github.com/ahmaddioxide/image-resolver-mcp",
+    "source": "github"
+  },
+  "version": "0.2.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@ahmaddioxide/mcp-image-resolver",
+      "version": "0.2.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PEXELS_API_KEY",
+          "description": "Pexels API key (free at https://www.pexels.com/api/)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "UNSPLASH_ACCESS_KEY",
+          "description": "Unsplash API key (free at https://unsplash.com/oauth/applications)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
