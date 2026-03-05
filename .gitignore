@@ -11,6 +11,10 @@ dist/
 .env.local
 .env.*.local
 
+# MCP Registry auth (mcp-publisher login)
+.mcpregistry_github_token
+.mcpregistry_registry_token
+
 # IDE
 .idea/
 .vscode/
