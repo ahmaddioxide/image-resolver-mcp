@@ -58,8 +58,8 @@ An MCP (Model Context Protocol) server that provides royalty-free image search f
 ## Quick Start
 
 ```bash
-git clone https://github.com/yourusername/image-mcp.git
-cd image-mcp
+git clone https://github.com/ahmaddioxide/image-resolver-mcp.git
+cd image-resolver-mcp
 npm install
 npm run build
 ```
