@@ -14,6 +14,7 @@ dist/
 # IDE
 .idea/
 .vscode/
+BRD.md
 *.swp
 *.swo
 
